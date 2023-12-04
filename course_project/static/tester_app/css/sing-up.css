@@ -1,0 +1,18 @@
+@media only screen and (max-width: 680px) {
+    body {
+        display: block !important;
+        padding-top: 0;
+    }
+
+    .login-page-aside {
+        display: none !important;
+    }
+
+    .login-page {
+        padding: 0 !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+}
