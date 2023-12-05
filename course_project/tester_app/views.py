@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from django.forms.utils import ErrorDict
 from django.http import HttpResponse
@@ -8,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.template.defaulttags import url
 from django.urls import reverse
 
-from tester_app.forms import NameForm, LoginForm
+from tester_app.forms import NameForm, LoginForm, RegisterForm
 
 context = {
     'login_form': LoginForm(label_suffix=''),
@@ -45,8 +46,33 @@ def login_view(request):
 
 
 def signup(request):
+    if request.user.is_authenticated:
+        return redirect(reverse('profile'))
+
     context['title'] = 'Зарегистрироваться'
     context['has_header'] = False
+
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            if form.cleaned_data['password1'] != form.cleaned_data['password2']:
+                messages.error(request, 'Password mismatch')
+            elif User.objects.filter(username=form.cleaned_data['login']):
+                messages.error(request, 'Username exists')
+            else:
+                user = form.register()
+                if user:
+                    firstname = form.cleaned_data['login']
+                    messages.success(request, f"Register <{firstname}> success")
+                else: messages.error(request, "Signup failed")
+
+        else:
+            messages.error(request, form.errors)
+
+    else:
+        form = RegisterForm(label_suffix='')
+
+    context['signup_form'] = form
     return render(request, 'tester_app/signup.html', context)
 
 
@@ -73,7 +99,7 @@ def forms_view(request):
             username = form.cleaned_data['your_name']
             messages.success(request, f"Message from <{username}> sent.")
         else:
-            messages.error(request, form.errors.as_text())
+            messages.error(request, form.errors)
 
     else:
         form = NameForm()
