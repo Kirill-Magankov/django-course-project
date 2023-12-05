@@ -1,0 +1,50 @@
+{% extends "tester_app/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="container mt-auto">
+    <div class="col-md-12 d-flex mx-auto rounded border">
+        <div class="col-md-6 p-5 bg-white rounded-start d-flex align-items-center login-page-aside">
+            <img src="{% static 'tester_app/media/sign-up_image.jpg' %}" class="img-fluid">
+        </div>
+        <form class="col-md d-flex justify-content-center align-items-center m-5 login-page">
+            <div class="row gy-3">
+                <h3>Регистрация</h3>
+                <div class="col-md-6">
+                    <label for="inputLastname" class="form-label">Фамилия</label>
+                    <input type="text" class="form-control" id="inputLastname" placeholder="Дубинин">
+                </div>
+                <div class="col-md-6">
+                    <label for="inputFirstname" class="form-label">Имя</label>
+                    <input type="text" class="form-control" id="inputFirstname" placeholder="Александр">
+                </div>
+                <div class="col-md-6">
+                    <label for="inputPatromymic" class="form-label">Отчество</label>
+                    <input type="text" class="form-control" id="inputPatromymic" placeholder="При наличии*">
+                </div>
+
+                <div class="col-md-12">
+                    <label for="inputEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="inputEmail" placeholder="user@yandex.ru">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="inputPassword" class="form-label">Пароль</label>
+                    <input type="password" class="form-control" id="inputPassword" placeholder="Введите проль">
+                </div>
+
+                <div class="col-md-6 mb-2">
+                    <label for="inputPasswordConfirm" class="form-label">Подтвердите пароль</label>
+                    <input type="password" class="form-control" id="inputPasswordConfirm"
+                           placeholder="Введите проль еще раз">
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                </div>
+                <p><a href="{% url 'index' %}" class="text-decoration-none">Назад</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -14,6 +14,23 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'forms' %}">Формы</a></li>
                 </ul>
 
+                {% if user.is_authenticated %}
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <a href="#" class="d-block text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32"
+                                 class="rounded-circle">
+                        </a>
+                        <ul class="dropdown-menu text-small shadow"
+                            style="position: absolute; inset: 0px 0px auto auto; margin: 0px; transform: translate(0px, 34px);">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}"> {{ user.get_username }}</a></li>
+                            <div class="dropdown-divider"></div>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Выйти</a></li>
+                        </ul>
+                    </div>
+                </div>
+                {% else %}
                 <div class="text-end">
                     <button type="button" data-bs-toggle="modal" data-bs-target="#loginModal"
                             class="btn btn-outline-light me-2">Войти
@@ -21,6 +38,7 @@
 
                     <a href="{% url 'signup' %}" class="btn btn-primary">Регистрация</a>
                 </div>
+                {% endif %}
             </div>
         </div>
     </nav>

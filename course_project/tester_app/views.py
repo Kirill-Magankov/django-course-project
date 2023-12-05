@@ -1,4 +1,6 @@
 from django.contrib import messages
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
 from django.core.handlers.wsgi import WSGIRequest
 from django.forms.utils import ErrorDict
 from django.http import HttpResponse
@@ -8,29 +10,35 @@ from django.urls import reverse
 
 from tester_app.forms import NameForm, LoginForm
 
-context = {'form': LoginForm(label_suffix='')}
+context = {
+    'login_form': LoginForm(label_suffix=''),
+    'has_header': True
+}
 
 
 def index(request):
     global context
     context['title'] = 'Главная'
+    context['has_header'] = True
     return render(request, 'tester_app/index.html', context)
 
 
 def about(request):
     context['title'] = 'О сайте'
+    context['has_header'] = True
     return render(request, 'tester_app/about.html', context)
 
 
-def login(request):
+def login_view(request):
     if request.method == "POST":
         form = LoginForm(request.POST)
-        if form.is_valid() :
+        if form.is_valid():
             if user := form.login():
+                login(request, user)
                 if user.is_superuser or user.is_staff:
                     print('Is superuser')
                     return redirect('/admin')
-            return redirect(reverse('index'))
+                return redirect(reverse('index'))
 
     messages.error(request, 'Login failed')
     return redirect(reverse('index') + '#login')
@@ -38,10 +46,27 @@ def login(request):
 
 def signup(request):
     context['title'] = 'Зарегистрироваться'
-    return render(request, 'tester_app/about.html', context)
+    context['has_header'] = False
+    return render(request, 'tester_app/signup.html', context)
+
+
+def logout_view(request):
+    logout(request)
+    return redirect(reverse('index'))
+
+
+@login_required(login_url='login')
+def profile_view(request):
+    context['title'] = 'Профиль'
+    context['has_header'] = True
+    user = request.user
+    if user.is_superuser or user.is_staff:
+        return redirect(f'/admin/auth/user/{user.id}')
+    return render(request, 'tester_app/profile.html', context)
 
 
 def forms_view(request):
+    context['has_header'] = True
     if request.method == "POST":
         form = NameForm(request.POST)
         if form.is_valid():
@@ -53,4 +78,5 @@ def forms_view(request):
     else:
         form = NameForm()
 
-    return render(request, 'tester_app/forms_view.html', {"form": form})
+    context['form_test'] = form
+    return render(request, 'tester_app/forms_view.html', context)

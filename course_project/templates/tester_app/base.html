@@ -11,7 +11,9 @@
 </head>
 <body>
 
+{% if has_header %}
 {% include 'tester_app/header.html' %}
+{% endif %}
 
 <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -26,24 +28,22 @@
                 <form action="{% url 'login' %}" method="POST">
                     {% csrf_token %}
                     <div class="form-floating mb-3">
-                        {{form.username}}
-                        {{form.username.label_tag}}
+                        {{login_form.username}}
+                        {{login_form.username.label_tag}}
                     </div>
                     <div class="form-floating mb-3">
-                        {{form.password}}
-                        {{form.password.label_tag}}
+                        {{login_form.password}}
+                        {{login_form.password.label_tag}}
                     </div>
                     <input class="w-100 mb-4 btn btn-lg rounded-3 btn-primary" type="submit" value="Войти">
-                    <p class="text-center">Нет аккаунта? <a href="{% url 'signup' %}">Зарегистрироваться</a></p>
+                    <p class="text-center">Нет аккаунта? <a href="{% url 'signup' %}" class="text-decoration-none">Зарегистрироваться</a></p>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<main class="container">
-    {% block body %}{% endblock %}
-</main>
+{% block body %}{% endblock %}
 {% include 'tester_app/footer.html' %}
 </body>
 
