@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.template.defaulttags import url
 from django.urls import reverse
 
-from tester_app.forms import NameForm, LoginForm, RegisterForm, UpdateProfileForm
+from tester_app.forms import NameForm, LoginForm, RegisterForm, UpdateUserForm
 
 context = {
     'login_form': LoginForm(label_suffix=''),
@@ -87,16 +87,11 @@ def profile_view(request):
     context['title'] = 'Профиль'
     context['has_header'] = True
     user = request.user
+
     if user.is_superuser or user.is_staff:
         return redirect(f'/admin/auth/user/{user.id}')
 
-    initial_data = {
-        'lastname': user.last_name,
-        'firstname': user.first_name,
-        'login': user.username,
-        'email': user.email,
-    }
-    form = RegisterForm(initial=initial_data)
+    form = UpdateUserForm(instance=user)
     context['form'] = form
     return render(request, 'tester_app/profile.html', context)
 
@@ -104,43 +99,15 @@ def profile_view(request):
 @login_required
 def profile_save(request):
     user = request.user
-    initial_data = {
-        'lastname': user.last_name,
-        'firstname': user.first_name,
-        'login': user.username,
-        'email': user.email
-    }
-
     if request.method == 'POST':
-        form = UpdateProfileForm(request.POST)
-        print(form.errors)
+        user_form = UpdateUserForm(request.POST, instance=user)
 
-        if form.is_valid():
-            form.save()
+        if user_form.is_valid():
+            user_form.save()
             messages.success(request, 'Your profile is updated successfully')
-            context['form'] = form
-            return render(request, 'tester_app/profile.html', context)
-        else:
-            messages.error(request, form.errors)
-
-    form = UpdateProfileForm(initial=initial_data)
-    context['form'] = form
-
-    return render(request, 'tester_app/profile.html', context)
-
-
-def forms_view(request):
-    context['has_header'] = True
-    if request.method == "POST":
-        form = NameForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['your_name']
-            messages.success(request, f"Message from <{username}> sent.")
-        else:
-            messages.error(request, form.errors)
-
+            return redirect(to='profile')
     else:
-        form = NameForm()
+        user_form = UpdateUserForm(instance=user)
 
-    context['form_test'] = form
-    return render(request, 'tester_app/forms_view.html', context)
+    context['form'] = user_form
+    return render(request, 'tester_app/profile.html', context)

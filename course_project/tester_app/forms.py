@@ -57,19 +57,20 @@ class RegisterForm(forms.Form):
         return user
 
 
-class UpdateProfileForm(forms.ModelForm):
-    lastname = forms.CharField(max_length=100, label='Фамилия',
-                               widget=forms.TextInput(attrs={"class": "form-control",
-                                                             "placeholder": "Иванов"}))
-
-    firstname = forms.CharField(max_length=100, label='Имя',
+class UpdateUserForm(forms.ModelForm):
+    last_name = forms.CharField(max_length=100, label='Фамилия',
                                 widget=forms.TextInput(attrs={"class": "form-control",
-                                                              "placeholder": "Дмитрий"}))
-
+                                                              "placeholder": "Иванов"}))
+    first_name = forms.CharField(max_length=100, label='Имя',
+                                 widget=forms.TextInput(attrs={"class": "form-control",
+                                                               "placeholder": "Дмитрий"}))
+    username = forms.CharField(max_length=50, label='Имя пользователя',
+                               widget=forms.TextInput(attrs={"class": "form-control",
+                                                             "placeholder": "ivanov_dmitry"}))
     email = forms.EmailField(max_length=100, label='E-mail*', required=False,
                              widget=forms.EmailInput(attrs={"class": "form-control",
                                                             "placeholder": "user@yandex.ru"}))
 
     class Meta:
         model = User
-        fields = ['lastname', 'firstname', 'email']
+        fields = ['last_name', 'first_name', 'username', 'email']

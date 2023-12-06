@@ -1,3 +1,5 @@
+{% load static %}
+
 <header class="mb-4">
     <nav class="navbar navbar-expand-sm navbar-dark bg-dark" aria-label="Fourth navbar example">
         <div class="container-fluid">
@@ -11,7 +13,6 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Каталог</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">О сайте</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'forms' %}">Формы</a></li>
                 </ul>
 
                 {% if user.is_authenticated %}
@@ -19,7 +20,7 @@
                     <div class="dropdown">
                         <a href="#" class="d-block text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
                            aria-expanded="false">
-                            <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32"
+                             <img src="{% static 'tester_app/media/default-profile.png' %}" alt="user" width="32" height="32"
                                  class="rounded-circle">
                         </a>
                         <ul class="dropdown-menu text-small shadow"
