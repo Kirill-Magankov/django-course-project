@@ -1,0 +1,52 @@
+{% extends "tester_app/base.html" %}
+
+{% block links %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/theme/abcdef.min.css">
+
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js">
+</script>
+
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/python/python.min.js">
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <form method="POST">
+        {% csrf_token %}
+        <label class="form-label">Enter your code:</label>
+
+        <div class='border rounded overflow-hidden'>
+            <textarea name='code_block' id='code_block'></textarea>
+        </div>
+
+        {% if result or error %}
+        <div class="mt-4">
+            <p>Test output:</p>
+            <code>
+                <pre class="m-0" wrap>{{result}}</pre>
+            </code>
+            {% if error %}<span class="text-danger">{{error}}</span>{% endif %}
+        </div>
+        {% endif %}
+        <input class="btn btn-primary mt-4" type="submit" value="Send">
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const htmlElement = document.querySelector("html")
+    let isDarkMode = htmlElement.getAttribute("data-bs-theme") === 'dark';
+
+    var editor = CodeMirror.fromTextArea(document.querySelector('#code_block'), {
+        lineNumbers: true,
+        tabSize: 4,
+        mode: 'python',
+        theme: isDarkMode ? 'abcdef' : 'default'
+    });
+</script>
+{% endblock %}

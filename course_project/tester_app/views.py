@@ -1,3 +1,7 @@
+import io
+import subprocess
+import sys
+
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -111,3 +115,39 @@ def profile_save(request):
 
     context['form'] = user_form
     return render(request, 'tester_app/profile.html', context)
+
+
+def code_view(request):
+    context['title'] = 'Code execution'
+    context['error'] = ''
+    context['result'] = ''
+
+    if request.method == 'POST':
+        code_block = request.POST.get('code_block')
+
+        try:
+            output = subprocess.run(['python3'], input=code_block, capture_output=True, text=True)
+
+            result = output.stdout
+            if error := output.stderr:
+                context['error'] = error
+
+            if output.stdout == '':
+                result = 'Empty response'
+
+            context['result'] = result
+        except Exception as e:
+            print(e)
+
+
+        # user_globals = {}
+        # user_locals = {}
+        # code_block = request.POST.get('code_block')
+        # try:
+        #     exec(code_block, user_globals, user_locals)
+        #     context['result'] = user_locals
+        # except Exception as e:
+        #     error_message = f"Ошибка выполнения кода: {str(e)}"
+        #     print(error_message)
+
+    return render(request, 'tester_app/code.html', context)
