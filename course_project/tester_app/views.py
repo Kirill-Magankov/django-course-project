@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.template.defaulttags import url
 from django.urls import reverse
 
-from tester_app.forms import NameForm, LoginForm, RegisterForm
+from tester_app.forms import NameForm, LoginForm, RegisterForm, UpdateProfileForm
 
 context = {
     'login_form': LoginForm(label_suffix=''),
@@ -64,7 +64,8 @@ def signup(request):
                 if user:
                     firstname = form.cleaned_data['login']
                     messages.success(request, f"Register <{firstname}> success")
-                else: messages.error(request, "Signup failed")
+                else:
+                    messages.error(request, "Signup failed")
 
         else:
             messages.error(request, form.errors)
@@ -88,6 +89,43 @@ def profile_view(request):
     user = request.user
     if user.is_superuser or user.is_staff:
         return redirect(f'/admin/auth/user/{user.id}')
+
+    initial_data = {
+        'lastname': user.last_name,
+        'firstname': user.first_name,
+        'login': user.username,
+        'email': user.email,
+    }
+    form = RegisterForm(initial=initial_data)
+    context['form'] = form
+    return render(request, 'tester_app/profile.html', context)
+
+
+@login_required
+def profile_save(request):
+    user = request.user
+    initial_data = {
+        'lastname': user.last_name,
+        'firstname': user.first_name,
+        'login': user.username,
+        'email': user.email
+    }
+
+    if request.method == 'POST':
+        form = UpdateProfileForm(request.POST)
+        print(form.errors)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile is updated successfully')
+            context['form'] = form
+            return render(request, 'tester_app/profile.html', context)
+        else:
+            messages.error(request, form.errors)
+
+    form = UpdateProfileForm(initial=initial_data)
+    context['form'] = form
+
     return render(request, 'tester_app/profile.html', context)
 
 

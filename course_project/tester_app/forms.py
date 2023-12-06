@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 
 
 class NameForm(forms.Form):
@@ -54,4 +53,23 @@ class RegisterForm(forms.Form):
         user = User.objects.create_user(data['login'], data['email'], data['password1'])
         user.last_name = data['lastname']
         user.first_name = data['firstname']
+        user.save()
         return user
+
+
+class UpdateProfileForm(forms.ModelForm):
+    lastname = forms.CharField(max_length=100, label='Фамилия',
+                               widget=forms.TextInput(attrs={"class": "form-control",
+                                                             "placeholder": "Иванов"}))
+
+    firstname = forms.CharField(max_length=100, label='Имя',
+                                widget=forms.TextInput(attrs={"class": "form-control",
+                                                              "placeholder": "Дмитрий"}))
+
+    email = forms.EmailField(max_length=100, label='E-mail*', required=False,
+                             widget=forms.EmailInput(attrs={"class": "form-control",
+                                                            "placeholder": "user@yandex.ru"}))
+
+    class Meta:
+        model = User
+        fields = ['lastname', 'firstname', 'email']
