@@ -1,0 +1,31 @@
+{% extends "tester_app/base.html" %}
+
+{% block body %}
+<div class="container mb-4">
+    <h1 class="mb-4">{{data.test.name}}</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row mx-0 g-3">
+            {% include "tester_app/messages.html" %}
+
+            {% for q in data.questions %}
+            <div class="card">
+                <div class="card-body py-4">
+                    <h5 class="mb-3">{{ q.text_question }}</h5>
+
+                    <input type="text" name="{{q.id}}" class="form-control"
+                           maxlength="100" placeholder="Ваш ответ" required=""
+                           id="{{q.id}}">
+
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="d-flex p-0">
+                <button type="submit" class="btn btn-primary">Отправить</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

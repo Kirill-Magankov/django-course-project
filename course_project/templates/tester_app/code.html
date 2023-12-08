@@ -14,6 +14,11 @@
 {% endblock %}
 
 {% block body %}
+<style>
+    .CodeMirror {
+    height: auto;
+    }
+</style>
 <div class="container">
     <form method="POST">
         {% csrf_token %}
@@ -26,10 +31,12 @@
         {% if result or error %}
         <div class="mt-4">
             <p>Test output:</p>
+            {% if error %}<span class="text-danger">{{error}}</span>
+            {% else %}
             <code>
                 <pre class="m-0" wrap>{{result}}</pre>
             </code>
-            {% if error %}<span class="text-danger">{{error}}</span>{% endif %}
+            {% endif %}
         </div>
         {% endif %}
         <input class="btn btn-primary mt-4" type="submit" value="Send">
@@ -46,7 +53,7 @@
         lineNumbers: true,
         tabSize: 4,
         mode: 'python',
-        theme: isDarkMode ? 'abcdef' : 'default'
-    });
+        theme: isDarkMode ? 'abcdef' : 'default',
+    }).setValue('\n\n\n\n');
 </script>
 {% endblock %}

@@ -9,11 +9,12 @@ from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from django.forms.utils import ErrorDict
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.template.defaulttags import url
 from django.urls import reverse
 
 from tester_app.forms import NameForm, LoginForm, RegisterForm, UpdateUserForm
+from tester_app.models import Testing, Answer, Question
 
 context = {
     'login_form': LoginForm(label_suffix=''),
@@ -22,9 +23,11 @@ context = {
 
 
 def index(request):
+    testing = Testing.objects.all()
     global context
     context['title'] = 'Главная'
     context['has_header'] = True
+    context['data'] = testing
     return render(request, 'tester_app/index.html', context)
 
 
@@ -97,10 +100,17 @@ def profile_view(request):
 
     form = UpdateUserForm(instance=user)
     context['form'] = form
+
+    answers = ((Answer.objects.filter(user=user).distinct()
+                .values('datetime', 'question__test__name'))
+               .order_by('-datetime'))
+    print(answers)
+    context['data'] = answers
+
     return render(request, 'tester_app/profile.html', context)
 
 
-@login_required
+@login_required(login_url='login')
 def profile_save(request):
     user = request.user
     if request.method == 'POST':
@@ -139,7 +149,6 @@ def code_view(request):
         except Exception as e:
             print(e)
 
-
         # user_globals = {}
         # user_locals = {}
         # code_block = request.POST.get('code_block')
@@ -151,3 +160,28 @@ def code_view(request):
         #     print(error_message)
 
     return render(request, 'tester_app/code.html', context)
+
+
+@login_required(login_url='login')
+def testing_view(request, test_slug):
+    context['title'] = 'Тестирование'
+    context['has_header'] = True
+    testing_data = Testing.objects.get(slug=test_slug)
+    questions = testing_data.question_set
+    context['data'] = {'test': testing_data,
+                       'questions': questions.all}
+
+    if request.method == 'POST':
+        params = request.POST
+        for p in params:
+            if p.isdigit():
+                try:
+                    question = questions.get(id=p)
+                    answer = params[p]
+                    a = Answer(answer=answer, question=question, user=request.user)
+                    a.save()
+                except Exception as e:
+                    messages.error(request, e)
+        return redirect('index')
+
+    return render(request, 'tester_app/testing.html', context)
