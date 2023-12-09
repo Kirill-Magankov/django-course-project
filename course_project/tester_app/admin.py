@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
 
-from tester_app.models import Testing, Answer, Question
+from tester_app.models import Testing, Answer, Question, Result
 
 
 # Register your models here.
@@ -29,13 +29,18 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ['get_test', 'question', 'user', 'datetime', 'answer', 'is_correct']
+    list_display = ['question', 'result', 'answer', 'is_correct']
 
-    def get_test(self, obj):
-        return obj.question.test
+    # def get_test(self, obj):
+    #     return obj.question.test
+    #
+    # get_test.short_description = 'test'
+    # get_test.admin_order_field = 'question__test'
 
-    get_test.short_description = 'test'
-    get_test.admin_order_field = 'question__test'
+    # list_filter = ['user', 'question']
+    # ordering = ('user',)
 
-    list_filter = ['question__test', 'user', 'question']
-    ordering = ('datetime', 'user', 'question__test', 'question')
+
+@admin.register(Result)
+class ResultAdmin(admin.ModelAdmin):
+    list_display = ['test', 'user', 'datetime', 'correct', 'wrong']

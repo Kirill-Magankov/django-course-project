@@ -7,6 +7,9 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Count, Sum
 from django.forms.utils import ErrorDict
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -14,7 +17,7 @@ from django.template.defaulttags import url
 from django.urls import reverse
 
 from tester_app.forms import NameForm, LoginForm, RegisterForm, UpdateUserForm
-from tester_app.models import Testing, Answer, Question
+from tester_app.models import Testing, Answer, Question, Result
 
 context = {
     'login_form': LoginForm(label_suffix=''),
@@ -101,11 +104,13 @@ def profile_view(request):
     form = UpdateUserForm(instance=user)
     context['form'] = form
 
-    answers = ((Answer.objects.filter(user=user).distinct()
-                .values('datetime', 'question__test__name'))
-               .order_by('-datetime'))
-    print(answers)
-    context['data'] = answers
+    results = Result.objects.filter(user=user).order_by('-datetime')
+
+    paginator = Paginator(results, 5)
+
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    context['data'] = page_obj
 
     return render(request, 'tester_app/profile.html', context)
 
@@ -162,6 +167,7 @@ def code_view(request):
     return render(request, 'tester_app/code.html', context)
 
 
+@transaction.atomic
 @login_required(login_url='login')
 def testing_view(request, test_slug):
     context['title'] = 'Тестирование'
@@ -173,15 +179,31 @@ def testing_view(request, test_slug):
 
     if request.method == 'POST':
         params = request.POST
-        for p in params:
-            if p.isdigit():
-                try:
-                    question = questions.get(id=p)
-                    answer = params[p]
-                    a = Answer(answer=answer, question=question, user=request.user)
-                    a.save()
-                except Exception as e:
-                    messages.error(request, e)
-        return redirect('index')
+        correct, wrong = 0, 0
+        if len(params) > 1:
+            r = Result(test=testing_data, user=request.user, correct=correct, wrong=wrong)
+            r.save()
+            for p in params:
+                if p.isdigit():
+                    try:
+                        question = questions.get(id=p)
+                        answer = params[p]
+                        a = Answer(answer=answer, question=question, result=r)
+                        a.save()
+                        if a.is_correct:
+                            correct += 1
+                        else:
+                            wrong += 1
+                    except Exception as e:
+                        messages.error(request, e)
+
+            try:
+                r.correct = correct
+                r.wrong = wrong
+                r.save()
+            except Exception as e:
+                messages.error(request, e)
+
+            return redirect('index')
 
     return render(request, 'tester_app/testing.html', context)

@@ -40,16 +40,27 @@ class Question(models.Model):
         return self.text_question
 
 
+class Result(models.Model):
+    test = models.ForeignKey(Testing, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    datetime = models.DateTimeField(default=datetime.datetime.now())
+    correct = models.IntegerField()
+    wrong = models.IntegerField()
+    objects = models.Manager()
+
+    def __str__(self):
+        return f'{self.correct} / {self.wrong}'
+
+
 class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    datetime = models.DateTimeField(default=datetime.datetime.now().isoformat(sep=" ", timespec="seconds"))
+    result = models.ForeignKey(Result, on_delete=models.CASCADE)
     answer = models.CharField(max_length=50)
     is_correct = models.BooleanField(default=False)
     objects = models.Manager()
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        self.is_correct = self.question.correct_answer == self.answer
+        self.is_correct = self.question.correct_answer == self.answer  # noqa
         super().save(force_insert, force_update, using)
 
     def __str__(self):
