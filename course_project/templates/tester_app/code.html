@@ -1,62 +1,13 @@
 {% extends "tester_app/base.html" %}
 
-{% block links %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/theme/abcdef.min.css">
-
-<script type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js">
-</script>
-
-<script type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/python/python.min.js">
-</script>
-{% endblock %}
-
 {% block body %}
-<style>
-    .CodeMirror {
-    height: auto;
-    }
-</style>
 <div class="container">
+    <h1 class="mb-4">Try your code</h1>
+
     <form method="POST">
         {% csrf_token %}
-        <label class="form-label">Enter your code:</label>
-
-        <div class='border rounded overflow-hidden'>
-            <textarea name='code_block' id='code_block'></textarea>
-        </div>
-
-        <label class="form-label mt-4" for="testInput">Test input:</label>
-        <textarea class="form-control" id="testInput" rows="2" name="test_input"></textarea>
-
-        {% if result or error %}
-        <div class="mt-4">
-            <p>Test output:</p>
-            {% if error %}<span class="text-danger">{{error}}</span>
-            {% else %}
-            <code>
-                <pre class="m-0" wrap>{{result}}</pre>
-            </code>
-            {% endif %}
-        </div>
-        {% endif %}
+        {% include "tester_app/code_component.html" %}
         <input class="btn btn-primary mt-4" type="submit" value="Send">
     </form>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    const htmlElement = document.querySelector("html")
-    let isDarkMode = htmlElement.getAttribute("data-bs-theme") === 'dark';
-
-    var editor = CodeMirror.fromTextArea(document.querySelector('#code_block'), {
-        lineNumbers: true,
-        tabSize: 4,
-        mode: 'python',
-        theme: isDarkMode ? 'abcdef' : 'default',
-    }).setValue('\n\n\n\n');
-</script>
 {% endblock %}

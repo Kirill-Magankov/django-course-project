@@ -14,7 +14,11 @@
                 <div class="card-body">
                     <h5 class="card-title">{{test.name}}</h5>
                     <p class="card-text">{{test.description}}</p>
-                    <a href="{{ test.get_absolute_url }}" class="btn btn-primary">Открыть</a>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ test.get_absolute_url }}" class="btn btn-primary">Открыть</a>
+                        <p class="text-muted m-0">{{test.type}}</p>
+
+                    </div>
                 </div>
             </div>
         </div>

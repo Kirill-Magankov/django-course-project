@@ -7,6 +7,17 @@
     <link rel="stylesheet" href="{% static 'tester_app/css/style.css' %}">
     <link rel="stylesheet" href="{% static 'tester_app/css/bootstrap.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/theme/abcdef.min.css">
+
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js">
+    </script>
+
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/python/python.min.js">
+    </script>
     {% block links %}{% endblock %}
 </head>
 <body>
@@ -37,7 +48,8 @@
                         {{login_form.password.label_tag}}
                     </div>
                     <input class="w-100 mb-4 btn btn-lg rounded-3 btn-primary" type="submit" value="Войти">
-                    <p class="text-center">Нет аккаунта? <a href="{% url 'signup' %}" class="text-decoration-none">Зарегистрироваться</a></p>
+                    <p class="text-center">Нет аккаунта? <a href="{% url 'signup' %}" class="text-decoration-none">Зарегистрироваться</a>
+                    </p>
                 </form>
             </div>
         </div>
@@ -69,6 +81,16 @@ document.addEventListener('DOMContentLoaded', function () {
     modal.show();
  }
 });
+</script>
+<script>
+    const htmlElement = document.querySelector("html")
+    let isDarkMode = htmlElement.getAttribute("data-bs-theme") === 'dark';
+    var editor = CodeMirror.fromTextArea(document.querySelector('#code_block'), {
+        lineNumbers: true,
+        tabSize: 4,
+        mode: 'python',
+        theme: isDarkMode ? 'abcdef' : 'default',
+    }).setValue(`{% if data.code_block %}{{data.code_block|escapejs}}{% else %}\n\n\n\n{% endif %}`);
 </script>
 <script src="{% static 'tester_app/js/bootstrap.bundle.js' %}"></script>
 {% block scripts %}{% endblock %}

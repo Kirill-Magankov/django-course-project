@@ -1,19 +1,11 @@
 import io
 import subprocess
-import sys
-
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
-from django.db import transaction
-from django.db.models import Count, Sum
-from django.forms.utils import ErrorDict
-from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.template.defaulttags import url
 from django.urls import reverse
 
 from tester_app.forms import NameForm, LoginForm, RegisterForm, UpdateUserForm
@@ -23,6 +15,8 @@ context = {
     'login_form': LoginForm(label_suffix=''),
     'has_header': True
 }
+
+PER_PAGE = 5
 
 
 def index(request):
@@ -106,7 +100,7 @@ def profile_view(request):
 
     results = Result.objects.filter(user=user).order_by('-datetime')
 
-    paginator = Paginator(results, 5)
+    paginator = Paginator(results, PER_PAGE)
 
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -161,7 +155,10 @@ def code_view(request):
     if request.method == 'POST':
         code_block = request.POST.get('code_block')
         test_input = request.POST.get('test_input')
-        context['data'] = code_block
+        context['data'] = {
+            'code_block': code_block,
+            'test_input': test_input,
+        }
 
         try:
             output, error = run_code(code_block, test_input)
@@ -184,11 +181,37 @@ def testing_view(request, test_slug):
     context['title'] = 'Тестирование'
     context['has_header'] = True
     testing_data = Testing.objects.get(slug=test_slug)
-    questions = testing_data.question_set.order_by('?')
-    context['data'] = {'test': testing_data,
-                       'questions': questions.all}
+    # questions = testing_data.question_set.order_by('?')
+    questions = testing_data.question_set.all()
 
-    if request.method == 'POST':
+    step = request.GET.get('step')
+    if testing_data.type == 'INTERPRETER' and not step:
+        return redirect(reverse('testing', args={test_slug}) + '?step=1')
+
+    if testing_data.type == 'INTERPRETER':
+        context['error'] = ''
+        context['result'] = ''
+
+    if step:
+        step = int(step)
+
+        context['question_link'] = {
+            'has_link': False if step == questions.count() else True,
+            'next_link': reverse('testing', args={test_slug}) + f'?step={step + 1}',
+            'enabled': 'disabled'
+        }
+
+        if step > questions.count():
+            messages.warning(request, 'Question does not exist')
+            return redirect(reverse('testing', args={test_slug}) + '?step=1')
+        questions = questions[step - 1]
+    else:
+        questions = questions
+
+    context['data'] = {'test': testing_data,
+                       'questions': questions}
+
+    if request.method == 'POST' and testing_data.type == 'TEST':
         params = request.POST
         correct, wrong = 0, 0
         if len(params) > 1:
@@ -216,5 +239,28 @@ def testing_view(request, test_slug):
                 messages.error(request, e)
 
             return redirect('index')
+    elif request.method == 'POST' and testing_data.type == 'INTERPRETER':
+        code_block = request.POST.get('code_block')
+        test_input = request.POST.get('test_input')
+        context['data']['code_block'] = code_block
+        context['data']['test_input'] = test_input
+
+        try:
+            output, error = run_code(code_block, test_input)
+            result = output
+
+            if error:
+                context['error'] = error
+            if not output:
+                result = 'Empty response'
+
+            context['result'] = result
+            context['question_link']['enabled'] = 'enabled'
+            messages.success(request, 'Everything is correct.')
+        except Exception as e:
+            print(e)
+
+        if not context['question_link']['has_link']:
+            print('Last question')
 
     return render(request, 'tester_app/testing.html', context)

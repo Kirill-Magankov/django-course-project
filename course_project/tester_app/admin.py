@@ -2,10 +2,18 @@ from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
 
-from tester_app.models import Testing, Answer, Question, Result
+from tester_app.models import Testing, Answer, Question, Result, TestSet
 
 
 # Register your models here.
+
+class QuestionInline(admin.TabularInline):
+    model = Question
+    fields = ['text_question']
+
+    show_change_link = True
+    extra = 0
+
 
 @admin.register(Testing)
 class TestingAdmin(admin.ModelAdmin):
@@ -15,32 +23,34 @@ class TestingAdmin(admin.ModelAdmin):
 
     list_display = ['name', 'description', 'type', 'slug']
     list_filter = ['type']
+    inlines = [QuestionInline]
 
 
-@admin.register(Question)
-class QuestionAdmin(admin.ModelAdmin):
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 85})}
-    }
-    list_display = ['test', 'text_question', 'correct_answer']
-    list_filter = ['test']
-    ordering = ('test', 'text_question')
-
-
-@admin.register(Answer)
-class AnswerAdmin(admin.ModelAdmin):
-    list_display = ['question', 'result', 'answer', 'is_correct']
-
-    # def get_test(self, obj):
-    #     return obj.question.test
-    #
-    # get_test.short_description = 'test'
-    # get_test.admin_order_field = 'question__test'
-
-    # list_filter = ['user', 'question']
-    # ordering = ('user',)
+class AnswerInline(admin.TabularInline):
+    model = Answer
+    fields = ['result', 'answer', 'is_correct']
+    show_change_link = True
+    extra = 0
 
 
 @admin.register(Result)
 class ResultAdmin(admin.ModelAdmin):
     list_display = ['test', 'user', 'datetime', 'correct', 'wrong']
+    inlines = [AnswerInline]
+
+
+class TestSetInline(admin.TabularInline):
+    model = TestSet
+    fields = ["test_data", "answer"]
+
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 2, 'cols': 85})}
+    }
+
+    extra = 0
+
+
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ["test", "text_question"]
+    inlines = [TestSetInline]

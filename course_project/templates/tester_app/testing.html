@@ -4,11 +4,58 @@
 <div class="container mb-4">
     <h1 class="mb-4">{{data.test.name}}</h1>
 
+    {% if data.test.type == "INTERPRETER" %}
     <form method="POST">
         {% csrf_token %}
         <div class="row mx-0 g-3">
-            {% include "tester_app/messages.html" %}
 
+            <div class="card">
+                <div class="card-body py-4">
+                    <h5 class="mb-4">{{ data.questions.text_question|linebreaks }}</h5>
+
+                    {% for test_set in data.questions.testset_set.all %}
+                    <div class="test-sets">
+                        <h5 class="fw-semibold">Пример {{forloop.counter}}</h5>
+
+                        <div class="row g-0">
+                            <div class="col-4">
+                                <p class="py-2 my-2 fw-semibold border-bottom">Ввод</p>
+                                <p>{{test_set.test_data|linebreaks}}</p>
+                            </div>
+
+                            <div class="col-4">
+                                <p class="py-2 my-2 fw-semibold border-bottom">Вывод</p>
+                                <p>{{test_set.answer|linebreaks}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <h5 class="fw-semibold">Напишите программу</h5>
+                    <div class="mt-4">
+                        {% include "tester_app/messages.html" %}
+                    </div>
+
+                    {% include 'tester_app/code_component.html' %}
+                </div>
+            </div>
+
+            <div class="d-flex p-0">
+                <button type="submit" class="btn btn-primary">Отправить</button>
+            </div>
+
+            {% if question_link.has_link %}
+            <div class="d-flex p-0 justify-content-end">
+                <a href="{{question_link.next_link}}" class="btn btn-outline-secondary {{question_link.enabled}}">Следующий</a>
+            </div>
+            {% endif %}
+
+        </div>
+    </form>
+    {% else %}
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row mx-0 g-3">
             {% for q in data.questions %}
             <div class="card">
                 <div class="card-body py-4">
@@ -27,5 +74,6 @@
             </div>
         </div>
     </form>
+    {% endif %}
 </div>
 {% endblock %}
