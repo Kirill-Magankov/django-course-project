@@ -132,6 +132,27 @@ def profile_save(request):
     return render(request, 'tester_app/profile.html', context)
 
 
+def run_code(code, input_data):
+    # Запуск процесса Python с блоком кода
+    process = subprocess.Popen(['python3', '-c', code],
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+
+    # Ввод данных в stdin
+    process.stdin.write(input_data.encode('utf-8'))
+    process.stdin.close()
+
+    errors = process.stderr.read()
+
+    # Получение вывода из stdout
+    output_data = process.stdout.read()
+
+    # Ожидание завершения процесса
+    process.wait()
+    return output_data.decode('utf-8'), errors.decode('utf-8')
+
+
 def code_view(request):
     context['title'] = 'Code execution'
     context['error'] = ''
@@ -139,41 +160,31 @@ def code_view(request):
 
     if request.method == 'POST':
         code_block = request.POST.get('code_block')
+        test_input = request.POST.get('test_input')
+        context['data'] = code_block
 
         try:
-            output = subprocess.run(['python3'], input=code_block, capture_output=True, text=True)
+            output, error = run_code(code_block, test_input)
+            result = output
 
-            result = output.stdout
-            if error := output.stderr:
+            if error:
                 context['error'] = error
-
-            if output.stdout == '':
+            if not output:
                 result = 'Empty response'
 
             context['result'] = result
         except Exception as e:
             print(e)
 
-        # user_globals = {}
-        # user_locals = {}
-        # code_block = request.POST.get('code_block')
-        # try:
-        #     exec(code_block, user_globals, user_locals)
-        #     context['result'] = user_locals
-        # except Exception as e:
-        #     error_message = f"Ошибка выполнения кода: {str(e)}"
-        #     print(error_message)
-
     return render(request, 'tester_app/code.html', context)
 
 
-@transaction.atomic
 @login_required(login_url='login')
 def testing_view(request, test_slug):
     context['title'] = 'Тестирование'
     context['has_header'] = True
     testing_data = Testing.objects.get(slug=test_slug)
-    questions = testing_data.question_set
+    questions = testing_data.question_set.order_by('?')
     context['data'] = {'test': testing_data,
                        'questions': questions.all}
 

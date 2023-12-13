@@ -13,6 +13,7 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Каталог</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">О сайте</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'code' %}">Интерпретатор</a></li>
                 </ul>
 
                 {% if user.is_authenticated %}
