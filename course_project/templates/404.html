@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <link rel="stylesheet" href="{% static 'tester_app/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'tester_app/css/bootstrap.css' %}">
+
+
+    <title>404</title>
+</head>
+<body>
+<style>
+    body { font-family: 'Arcade Classic'; }
+    .error { color: #ff4345; }
+    .link { font-family: 'Segoe UI SemiBold'; }
+
+</style>
+
+<div class="d-flex h-100 justify-content-center align-items-center">
+    <div class="row">
+        <div class="text-center error">
+        <p class="m-0" style="font-size: 25rem;margin-top: -0.5em !important;">404</p>
+        <p class="m-0" style="font-size: 5rem; margin-top: -2em !important;">PAGE NOT FOUND</p>
+    </div>
+    <div>
+        <p class="text-center link text-uppercase"><a class="text-decoration-none" href="/">Go back</a></p>
+    </div>
+    </div>
+</div>
+
+</body>
+</html>

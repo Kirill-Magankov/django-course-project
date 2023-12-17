@@ -54,11 +54,11 @@
                 <small>{{a.datetime}}</small>
             </div>
             <span class="badge
-            {% if a.correct == a.answer_set.count %}bg-success
+            {% if a.correct == a.correct|add:a.wrong %}bg-success
             {% elif a.correct == 0 %}bg-danger
             {% else %} bg-secondary
             {% endif %}
-            rounded-pill">{{a.correct}}/{{a.answer_set.count}}</span>
+            rounded-pill">{{a.correct}}/{{a.correct|add:a.wrong}}</span>
         </li>
         {% endfor %}
     </ul>

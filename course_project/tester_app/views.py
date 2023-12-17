@@ -5,6 +5,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
@@ -126,7 +127,7 @@ def profile_save(request):
     return render(request, 'tester_app/profile.html', context)
 
 
-def run_code(code, input_data):
+def code_execute(code, input_data):
     # Запуск процесса Python с блоком кода
     process = subprocess.Popen(['python3', '-c', code],
                                stdin=subprocess.PIPE,
@@ -144,7 +145,7 @@ def run_code(code, input_data):
 
     # Ожидание завершения процесса
     process.wait()
-    return output_data.decode('utf-8'), errors.decode('utf-8')
+    return output_data.decode('utf-8').strip(), errors.decode('utf-8').strip()
 
 
 def code_view(request):
@@ -161,7 +162,7 @@ def code_view(request):
         }
 
         try:
-            output, error = run_code(code_block, test_input)
+            output, error = code_execute(code_block, test_input)
             result = output
 
             if error:
@@ -176,6 +177,14 @@ def code_view(request):
     return render(request, 'tester_app/code.html', context)
 
 
+def check_answers(test_set, code):
+    for s in test_set.all():
+        result, error = code_execute(code, s.test_data)
+        if result != s.answer or error: return False
+    return True
+    # output, error = run_code(code, test_input)
+
+
 @login_required(login_url='login')
 def testing_view(request, test_slug):
     context['title'] = 'Тестирование'
@@ -184,20 +193,26 @@ def testing_view(request, test_slug):
     # questions = testing_data.question_set.order_by('?')
     questions = testing_data.question_set.all()
 
+    is_completed = False
     step = request.GET.get('step')
-    if testing_data.type == 'INTERPRETER' and not step:
-        return redirect(reverse('testing', args={test_slug}) + '?step=1')
+    id_ = request.GET.get('id')
+    if testing_data.type == 'INTERPRETER' and (not step or not id_):
+        r = Result(test=testing_data, user=request.user, correct=0, wrong=testing_data.question_set.count())
+        r.save()
+        return redirect(reverse('testing', args={test_slug}) + f'?step=1&id={r.id}')
 
+    r = None
     if testing_data.type == 'INTERPRETER':
+        r = get_object_or_404(Result, id=id_)
         context['error'] = ''
         context['result'] = ''
-
+    print(testing_data.question_set.count())
     if step:
         step = int(step)
 
         context['question_link'] = {
             'has_link': False if step == questions.count() else True,
-            'next_link': reverse('testing', args={test_slug}) + f'?step={step + 1}',
+            'next_link': reverse('testing', args={test_slug}) + f'?step={step + 1}&id={id_}',
             'enabled': 'disabled'
         }
 
@@ -205,6 +220,17 @@ def testing_view(request, test_slug):
             messages.warning(request, 'Question does not exist')
             return redirect(reverse('testing', args={test_slug}) + '?step=1')
         questions = questions[step - 1]
+
+        if r.test != testing_data or r.answer_set.count() == testing_data.question_set.count():
+            raise Http404()
+
+        for a in r.answer_set.all():
+            if a.question == questions:
+                is_completed = True
+                context['question_link']['enabled'] = 'enabled'
+                messages.success(request, 'Question has been answered')
+                break
+
     else:
         questions = questions
 
@@ -235,18 +261,23 @@ def testing_view(request, test_slug):
                 r.correct = correct
                 r.wrong = wrong
                 r.save()
+                return redirect('profile')
             except Exception as e:
                 messages.error(request, e)
 
             return redirect('index')
+
     elif request.method == 'POST' and testing_data.type == 'INTERPRETER':
+        if is_completed:
+            return render(request, 'tester_app/testing.html', context)
+
         code_block = request.POST.get('code_block')
         test_input = request.POST.get('test_input')
         context['data']['code_block'] = code_block
         context['data']['test_input'] = test_input
 
         try:
-            output, error = run_code(code_block, test_input)
+            output, error = code_execute(code_block, test_input)
             result = output
 
             if error:
@@ -255,12 +286,27 @@ def testing_view(request, test_slug):
                 result = 'Empty response'
 
             context['result'] = result
-            context['question_link']['enabled'] = 'enabled'
-            messages.success(request, 'Everything is correct.')
+            if not check_answers(questions.testset_set, code_block):
+                if error:
+                    context['error'] = error
+                else:
+                    context['error'] = None
+                messages.error(request, 'Wrong answer')
+            else:
+                context['question_link']['enabled'] = 'enabled'
+                context['error'] = None
+
+                r.correct += 1
+                r.wrong -= 1
+                r.save()
+                a = Answer(answer=code_block, question=questions, result=r)
+                a.is_correct = True
+                a.save()
+
+                if not context['question_link']['has_link']:
+                    return redirect('profile')
+                messages.success(request, 'Everything is correct')
         except Exception as e:
             print(e)
-
-        if not context['question_link']['has_link']:
-            print('Last question')
 
     return render(request, 'tester_app/testing.html', context)

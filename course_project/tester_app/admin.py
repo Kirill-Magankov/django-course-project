@@ -30,6 +30,7 @@ class AnswerInline(admin.TabularInline):
     model = Answer
     fields = ['result', 'answer', 'is_correct']
     show_change_link = True
+
     extra = 0
 
 

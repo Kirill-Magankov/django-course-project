@@ -1,3 +1,8 @@
+@font-face {
+    font-family: 'Arcade Classic';
+    src: url("../fonts/ARCADECLASSIC.TTF");
+}
+
 body, html {
     height: 100%;
 }
